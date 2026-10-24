@@ -138,6 +138,18 @@ func (p *Provider) BaseURL() string {
 	return p.baseURL
 }
 
+// modelRejectsTemperature reports models that have thinking enabled by
+// default and reject an explicit temperature parameter (API 400).
+func modelRejectsTemperature(model string) bool {
+	m := strings.ToLower(strings.TrimSpace(model))
+	for _, fam := range []string{"-haiku-5", "-sonnet-5", "-opus-5", "-opus-4-5", "-sonnet-4-5"} {
+		if strings.Contains(m, fam) {
+			return true
+		}
+	}
+	return false
+}
+
 func buildParams(
 	messages []Message,
 	tools []ToolDefinition,
@@ -235,7 +247,9 @@ func buildParams(
 		params.System = system
 	}
 
-	if temp, ok := options["temperature"].(float64); ok {
+	// Thinking-always-on models (Claude 5 family, Opus 4.5+) reject any
+	// explicit temperature with 400 "temperature is deprecated".
+	if temp, ok := options["temperature"].(float64); ok && !modelRejectsTemperature(apiModel) {
 		params.Temperature = anthropic.Float(temp)
 	}
 

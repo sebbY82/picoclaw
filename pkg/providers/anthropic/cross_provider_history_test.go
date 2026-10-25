@@ -5,11 +5,11 @@ import (
 	"testing"
 )
 
-// Regression: history produced by a non-Anthropic provider (reloaded session
-// store where ToolCall.Name/Arguments are json:"-" and only Function survives,
-// sometimes with an empty Function.Name) must not produce content-less
-// assistant messages or orphaned tool results — both make the API 400
-// ("messages.N.content: Field required").
+// Regression: dead tool calls (empty name/id — e.g. truncated upstream
+// streams, or old stores that persisted them without a function object)
+// must not survive into the Anthropic request: the assistant turn ends up
+// with zero blocks, which marshals without "content" and 400s with
+// "messages.N.content: Field required".
 func TestBuildParams_CrossProviderHistory(t *testing.T) {
 	opts := map[string]any{"max_tokens": 8192}
 

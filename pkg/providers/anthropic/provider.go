@@ -226,12 +226,13 @@ func buildParams(
 						toolUseIDs[tc.ID] = true
 					}
 				}
-				// History crossing providers can leave assistant messages whose
-				// tool calls were all skipped (empty names from another
-				// provider's format). An assistant message with zero blocks
-				// marshals without "content" -> 400 "content: Field required".
-				// Drop the empty message; its tool results become orphans and
-				// are skipped below.
+				// Assistant messages whose tool calls were all skipped
+				// (dead tool calls from truncated/malformed upstream
+				// streams, or older session stores that persisted them
+				// without a function object) would marshal with zero
+				// blocks -> 400 "content: Field required". Drop the empty
+				// message; its tool results become orphans and are
+				// skipped below.
 				if len(blocks) == 0 {
 					continue
 				}

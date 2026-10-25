@@ -276,10 +276,12 @@ func buildRequestBody(
 				}
 			}
 
-			// Assistant messages whose blocks all got skipped (empty tool
-			// names from cross-provider history) would send an empty
-			// content array -> API 400. Drop them; their tool results
-			// become orphans and are skipped below.
+			// Assistant messages whose blocks all got skipped (dead tool
+			// calls from truncated/malformed upstream streams, or older
+			// session stores that persisted them without a function
+			// object) would send an empty content array -> API 400. Drop
+			// them; their tool results become orphans and are skipped
+			// below.
 			if len(content) == 0 {
 				continue
 			}
